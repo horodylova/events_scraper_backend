@@ -1,4 +1,4 @@
-const config = {
+ const config = {
     brightData: {
         username: process.env.BRIGHT_DATA_USERNAME,
         password: process.env.BRIGHT_DATA_PASSWORD,
@@ -9,8 +9,8 @@ const config = {
         apiKey: process.env.HF_API_KEY,
         modelUrl: process.env.HF_MODEL_URL,
     },
-    britishMuseum: {
-        eventsUrl: 'https://www.britishmuseum.org/exhibitions-events',
+    targetWebsite: {
+        url: 'https://www.londontheatre.co.uk/whats-on',
     },
 };
 

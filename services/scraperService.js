@@ -3,7 +3,7 @@ const cheerio = require('cheerio');
 const config = require('../config');
 const https = require('https');
 
-const { brightData, britishMuseum } = config;
+const { brightData, targetWebsite } = config;
 
 const httpsAgent = new https.Agent({
     rejectUnauthorized: false,
@@ -23,12 +23,11 @@ async function fetchDataWithBrightData(url) {
             },
             httpsAgent: httpsAgent,
             headers: {
-                'Host': 'www.britishmuseum.org',
                 'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
                 'Accept-Language': 'en-US,en;q=0.9',
                 'Accept-Encoding': 'gzip, deflate, br',
-                'Referer': 'https://www.britishmuseum.org/',
+                'Referer': url,
                 'Connection': 'keep-alive',
                 'Upgrade-Insecure-Requests': '1',
             }
@@ -44,16 +43,46 @@ async function fetchDataWithBrightData(url) {
     }
 }
 
-async function scrapeMuseumEvents() {
+async function scrapeWebsiteContent(limit) {
     try {
-        const html = await fetchDataWithBrightData(britishMuseum.eventsUrl);
-        return html;
+        const html = await fetchDataWithBrightData(targetWebsite.url);
+        const $ = cheerio.load(html);
+
+        const shows = [];
+
+        // ИЗМЕНЕН СЕЛЕКТОР НА 'div.show-card'
+        $('div.show-card').each((i, el) => {
+            if (limit && shows.length >= limit) {
+                return false;
+            }
+
+            const titleElement = $(el).find('h3.show-card__title a'); // Проверяем этот селектор
+            const title = titleElement.text().trim();
+            const relativeUrl = titleElement.attr('href');
+            const fullPageUrl = new URL(relativeUrl, targetWebsite.url).href;
+
+            const imageUrl = $(el).find('div.show-card__image img').attr('src'); // Проверяем этот селектор
+            const fullImageUrl = new URL(imageUrl, targetWebsite.url).href;
+
+            if (title && fullPageUrl) {
+                shows.push({
+                    title: title,
+                    fullPageUrl: fullPageUrl,
+                    imageUrl: fullImageUrl
+                });
+            }
+        });
+
+        console.log(`Parsed ${shows.length} shows.`);
+        return shows;
     } catch (error) {
-        console.error('Error in scrapeMuseumEvents:', error.message);
+        console.error('Error in scrapeWebsiteContent:', error.message);
         throw error;
     }
 }
 
 module.exports = {
-    scrapeMuseumEvents,
+    scrapeWebsiteContent,
 };
+
+

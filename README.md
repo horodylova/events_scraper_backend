@@ -1,1 +1,1 @@
-# my_museum_scraper_backend
+# events_scraper_backend

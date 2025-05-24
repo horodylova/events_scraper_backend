@@ -5,15 +5,19 @@ async function getAndScrapeEvents(req, res) {
     try {
         const aggregator = new TheatreDataAggregator();
         const results = await aggregator.scrapeAll();
-        await dataService.saveNewEvents(results.shows);
+        
+        // Сохраняем данные с использованием обновленного сервиса
+        const savedData = await dataService.saveNewEvents([...results.shows, ...results.reviews]);
         
         res.status(200).json({
-            message: 'Successfully scraped, saved, and parsed content from London Theatre!',
-            events: results.shows,
+            message: 'Successfully scraped, saved, and parsed content!',
+            shows: savedData.shows,
+            reviews: savedData.reviews,
             summary: {
                 totalSources: results.totalSources,
                 successfulSources: results.successfulSources,
-                totalShows: results.shows.length,
+                totalShows: savedData.shows.length,
+                totalReviews: savedData.reviews.length,
                 errors: results.errors
             }
         });

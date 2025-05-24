@@ -1,11 +1,15 @@
 const BaseScraper = require('./base-scraper');
-const LondonTheatreScraper = require('./london-theatre-scraper.js');
+// Временно отключаем LondonTheatreScraper
+// const LondonTheatreScraper = require('./london-theatre-scraper.js');
+const TimeoutScraper = require('./timeout-scraper.js');
 
 class TheatreDataAggregator {
     constructor() {
-        // Используем только лондонский театральный скрапер
+        // Используем только TimeOut скрапер
         this.scrapers = [
-            new LondonTheatreScraper()
+            // Временно отключаем LondonTheatreScraper
+            // new LondonTheatreScraper(),
+            new TimeoutScraper()
         ];
     }
 
@@ -23,8 +27,14 @@ class TheatreDataAggregator {
                 const data = await scraper.scrape(limit);
                 results.successfulSources++;
                 
-                // Все данные идут в shows, так как у нас только LondonTheatre
-                results.shows.push(...data);
+                // Распределяем данные в зависимости от источника
+                if (scraper.name === 'TimeOut') {
+                    // TimeOut данные идут в reviews, так как это обзоры
+                    results.reviews.push(...data);
+                } else {
+                    // Остальные данные идут в shows
+                    results.shows.push(...data);
+                }
                 
                 return { source: scraper.name, success: true, count: data.length };
             } catch (error) {
@@ -42,6 +52,7 @@ class TheatreDataAggregator {
         console.log(`Total sources: ${results.totalSources}`);
         console.log(`Successful sources: ${results.successfulSources}`);
         console.log(`Total shows: ${results.shows.length}`);
+        console.log(`Total reviews: ${results.reviews.length}`);
         console.log(`Errors: ${results.errors.length}`);
         
         return results;
@@ -59,6 +70,8 @@ class TheatreDataAggregator {
 
 module.exports = {
     BaseScraper,
-    LondonTheatreScraper,
+    // Временно отключаем LondonTheatreScraper в экспорте
+    // LondonTheatreScraper,
+    TimeoutScraper,
     TheatreDataAggregator
 };

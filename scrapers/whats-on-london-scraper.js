@@ -5,7 +5,7 @@ class WhatsOnLondonScraper extends BaseScraper {
 
     async scrape(limit = null) {
         try {
-            const html = await this.fetchDataWithBrightData('https://www.whatsonlondon.co.uk/theatre');
+            const html = await this.fetchDataWithBrightData('https://www.londonboxoffice.co.uk/all-london-shows');
             const $ = cheerio.load(html);
             const shows = [];
 

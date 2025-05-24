@@ -1,5 +1,8 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
+const apiRoutes = require('./routes/apiRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -11,9 +14,7 @@ app.get('/', (req, res) => {
   res.send('Hello from the basic Express server! Server is running.');
 });
 
-app.get('/api/message', (req, res) => {
-  res.json({ message: 'This is a message from the API!' });
-});
+app.use('/api', apiRoutes);
 
 app.use((req, res, next) => {
   res.status(404).json({ message: 'Route not found.' });

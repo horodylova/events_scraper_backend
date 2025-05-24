@@ -50,19 +50,19 @@ async function scrapeWebsiteContent(limit) {
 
         const shows = [];
 
-        // ИЗМЕНЕН СЕЛЕКТОР НА 'div.show-card'
-        $('div.show-card').each((i, el) => {
+        $('div[data-test-id^="poster-"]').each((i, el) => {
             if (limit && shows.length >= limit) {
                 return false;
             }
 
-            const titleElement = $(el).find('h3.show-card__title a'); // Проверяем этот селектор
+            const titleElement = $(el).find('p[data-test-id^="product-"]');
             const title = titleElement.text().trim();
-            const relativeUrl = titleElement.attr('href');
-            const fullPageUrl = new URL(relativeUrl, targetWebsite.url).href;
 
-            const imageUrl = $(el).find('div.show-card__image img').attr('src'); // Проверяем этот селектор
-            const fullImageUrl = new URL(imageUrl, targetWebsite.url).href;
+            const relativeUrl = titleElement.closest('a').attr('href');
+            const fullPageUrl = relativeUrl ? new URL(relativeUrl, targetWebsite.url).href : null;
+
+            const imageUrl = $(el).find('img').attr('src');
+            const fullImageUrl = imageUrl ? new URL(imageUrl, targetWebsite.url).href : null;
 
             if (title && fullPageUrl) {
                 shows.push({
@@ -84,5 +84,6 @@ async function scrapeWebsiteContent(limit) {
 module.exports = {
     scrapeWebsiteContent,
 };
+
 
 

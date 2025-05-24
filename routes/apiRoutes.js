@@ -3,6 +3,7 @@ const eventController = require('../controllers/eventController');
 
 const router = express.Router();
 
-router.get('/events', eventController.getAndScrapeEvents);
+router
+.get('/scrape', eventController.getAndScrapeEvents)
 
 module.exports = router;

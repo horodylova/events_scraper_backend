@@ -8,10 +8,7 @@
     huggingFace: {
         apiKey: process.env.HF_API_KEY,
         modelUrl: process.env.HF_MODEL_URL,
-    },
-    targetWebsite: {
-        url: 'https://www.londontheatre.co.uk/whats-on',
-    },
+    }
 };
 
 module.exports = config;

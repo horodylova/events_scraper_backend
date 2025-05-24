@@ -1,13 +1,21 @@
-const scraperService = require('../services/scraperService');
+const { TheatreDataAggregator } = require('../scrapers/index');
 const dataService = require('../data/eventStorage');
 
 async function getAndScrapeEvents(req, res) {
     try {
-        const events = await scraperService.scrapeWebsiteContent();
-        await dataService.saveNewEvents(events);
+        const aggregator = new TheatreDataAggregator();
+        const results = await aggregator.scrapeAll();
+        await dataService.saveNewEvents(results.shows);
+        
         res.status(200).json({
-            message: 'Successfully scraped, saved, and parsed content from the target website!',
-            events: events,
+            message: 'Successfully scraped, saved, and parsed content from London Theatre!',
+            events: results.shows,
+            summary: {
+                totalSources: results.totalSources,
+                successfulSources: results.successfulSources,
+                totalShows: results.shows.length,
+                errors: results.errors
+            }
         });
     } catch (error) {
         console.error('Error in getAndScrapeEvents controller:', error.message);

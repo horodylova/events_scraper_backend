@@ -71,8 +71,7 @@ async function saveNewEvents(newScrapedEvents) {
         reviews: processedReviews
     };
 }
-
-// Обработка шоу с предотвращением дублирования
+ 
 async function processShows(existingShows, newShows) {
     const result = [...existingShows];
     const titleMap = new Map(result.map(show => [show.title.toLowerCase(), show]));
@@ -81,22 +80,21 @@ async function processShows(existingShows, newShows) {
         const normalizedTitle = newShow.title.toLowerCase();
         
         if (titleMap.has(normalizedTitle)) {
-            // Обновляем существующее шоу
+         
             const existingShow = titleMap.get(normalizedTitle);
             
-            // Обновляем только если новые данные свежее
+            
             if (new Date(newShow.scrapedAt) > new Date(existingShow.scrapedAt)) {
-                // Сохраняем ID существующего шоу
+              
                 const showId = existingShow.id;
                 
-                // Приоритизация изображений - сохраняем существующее, если оно есть
+            
                 const imageUrl = existingShow.imageUrl || newShow.imageUrl;
-                
-                // Обновляем данные
+      
                 Object.assign(existingShow, newShow, { id: showId, imageUrl });
             }
         } else {
-            // Добавляем новое шоу с уникальным ID
+            
             const showWithId = {
                 id: crypto.randomUUID(),
                 ...newShow
@@ -109,47 +107,43 @@ async function processShows(existingShows, newShows) {
     return result;
 }
 
-// Обработка обзоров с предотвращением дублирования и связыванием с шоу
+ 
 async function processReviews(existingReviews, newReviews, shows) {
     const result = [...existingReviews];
     const reviewMap = new Map();
     
-    // Создаем карту существующих обзоров по названию спектакля
     for (const review of result) {
         reviewMap.set(review.title.toLowerCase(), review);
     }
-    
-    // Создаем карту шоу по названию для связывания
+     
     const showMap = new Map(shows.map(show => [show.title.toLowerCase(), show]));
     
     for (const newReview of newReviews) {
         const normalizedTitle = newReview.title.toLowerCase();
-        
-        // Связываем обзор с шоу, если оно существует
+         
         if (showMap.has(normalizedTitle)) {
             const relatedShow = showMap.get(normalizedTitle);
             newReview.showId = relatedShow.id;
             
-            // Приоритизация изображений - используем изображение из шоу, если оно есть
+        
             if (relatedShow.imageUrl) {
                 newReview.imageUrl = relatedShow.imageUrl;
             }
         }
         
         if (reviewMap.has(normalizedTitle)) {
-            // Обновляем существующий обзор
+        
             const existingReview = reviewMap.get(normalizedTitle);
-            
-            // Обновляем только если новые данные свежее
+          
             if (new Date(newReview.scrapedAt) > new Date(existingReview.scrapedAt)) {
-                // Сохраняем ID существующего обзора
+         
                 const reviewId = existingReview.id;
                 
-                // Обновляем данные
+              
                 Object.assign(existingReview, newReview, { id: reviewId });
             }
         } else {
-            // Добавляем новый обзор с уникальным ID
+         
             const reviewWithId = {
                 id: crypto.randomUUID(),
                 ...newReview
@@ -161,8 +155,7 @@ async function processReviews(existingReviews, newReviews, shows) {
     
     return result;
 }
-
-// Для обратной совместимости - чтение всех событий
+ 
 async function readEvents() {
     const shows = await readShows();
     const reviews = await readReviews();

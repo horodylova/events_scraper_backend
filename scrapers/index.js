@@ -1,14 +1,15 @@
 const BaseScraper = require('./base-scraper');
- const LondonTheatreScraper = require('./london-theatre-scraper.js');
+const LondonTheatreScraper = require('./london-theatre-scraper.js');
 const TimeoutScraper = require('./timeout-scraper.js');
+const LondonBoxOfficeScraper = require('./londonboxoffice-scraper.js');
 
 class TheatreDataAggregator {
     constructor() {
         
         this.scrapers = [
-    
             new LondonTheatreScraper(),
-            new TimeoutScraper()
+            new TimeoutScraper(),
+            new LondonBoxOfficeScraper()
         ];
     }
 
@@ -68,8 +69,8 @@ class TheatreDataAggregator {
 
 module.exports = {
     BaseScraper,
-   
     LondonTheatreScraper,
     TimeoutScraper,
+    LondonBoxOfficeScraper,
     TheatreDataAggregator
 };

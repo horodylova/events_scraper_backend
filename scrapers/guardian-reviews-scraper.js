@@ -1,6 +1,6 @@
 class GuardianReviewsScraper extends BaseScraper {
     constructor() {
-        super('Guardian', 'https://www.theguardian.com');
+        super('Guardian', 'https://www.theguardian.com/stage/stage+tone/reviews');
     }
 
     

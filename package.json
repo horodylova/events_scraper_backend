@@ -1,5 +1,5 @@
 {
-  "name": "my_museum_scraper_backend",
+  "name": "events_scraper_backend",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -17,7 +17,6 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "puppeteer": "^24.9.0",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2"
+    "puppeteer-core": "^24.9.0"
   }
 }

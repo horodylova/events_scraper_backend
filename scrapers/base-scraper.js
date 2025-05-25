@@ -1,13 +1,8 @@
-const axios = require('axios');
+const puppeteer = require('puppeteer-core'); 
 const cheerio = require('cheerio');
 const config = require('../config');
-const https = require('https');
 
 const { brightData } = config;
-
-const httpsAgent = new https.Agent({
-    rejectUnauthorized: false,
-});
 
 class BaseScraper {
     constructor(name, baseUrl) {
@@ -15,43 +10,45 @@ class BaseScraper {
         this.baseUrl = baseUrl;
     }
 
-    async fetchDataWithBrightData(url) {
-        console.log(`[${this.name}] Requesting URL: ${url} via Bright Data proxy...`);
+    async fetchDataWithBrowser(url) {
+        console.log(`[${this.name}] Connecting to Bright Data Browser API...`);
+        let browser;
         try {
-            const response = await axios.get(url, {
-                proxy: {
-                    host: brightData.host,
-                    port: brightData.port,
-                    auth: {
-                        username: brightData.username,
-                        password: brightData.password,
-                    }
-                },
-                httpsAgent: httpsAgent,
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                    'Accept-Encoding': 'gzip, deflate, br',
-                    'Referer': url,
-                    'Connection': 'keep-alive',
-                    'Upgrade-Insecure-Requests': '1',
-                }
+            browser = await puppeteer.connect({
+                browserWSEndpoint: brightData.browserApiEndpoint,
+                ignoreHTTPSErrors: true, 
+                headless: true, 
             });
-            console.log(`[${this.name}] Successfully received response. Status: ${response.status}`);
-            return response.data;
+            console.log(`[${this.name}] Connected to browser! Navigating to site: ${url}`);
+            const page = await browser.newPage();
+            
+           
+            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+            console.log(`[${this.name}] Navigated! Waiting for page content...`);
+
+         
+            await page.waitForSelector('article.tile_article_14y0w_1, div[data-testid="recommended_testID"]', { timeout: 30000 });
+
+
+            const html = await page.content();
+            console.log(`[${this.name}] Successfully received HTML content via Browser API.`);
+            return html;
         } catch (error) {
-            console.error(`[${this.name}] Error fetching data:`, error.message);
+            console.error(`[${this.name}] Error fetching data with Browser API:`, error.message);
             throw error;
+        } finally {
+            if (browser) {
+                await browser.close();
+                console.log(`[${this.name}] Browser closed.`);
+            }
         }
     }
-
     
     async scrape(limit) {
         throw new Error('scrape method must be implemented by subclass');
     }
 
-     buildFullUrl(relativeUrl) {
+    buildFullUrl(relativeUrl) {
         if (!relativeUrl) return null;
         try {
             return new URL(relativeUrl, this.baseUrl).href;

@@ -1,14 +1,13 @@
 const BaseScraper = require('./base-scraper');
-// Временно отключаем LondonTheatreScraper
-// const LondonTheatreScraper = require('./london-theatre-scraper.js');
+ const LondonTheatreScraper = require('./london-theatre-scraper.js');
 const TimeoutScraper = require('./timeout-scraper.js');
 
 class TheatreDataAggregator {
     constructor() {
-        // Используем только TimeOut скрапер
+        
         this.scrapers = [
-            // Временно отключаем LondonTheatreScraper
-            // new LondonTheatreScraper(),
+    
+            new LondonTheatreScraper(),
             new TimeoutScraper()
         ];
     }
@@ -26,13 +25,12 @@ class TheatreDataAggregator {
             try {
                 const data = await scraper.scrape(limit);
                 results.successfulSources++;
-                
-                // Распределяем данные в зависимости от источника
+                 
                 if (scraper.name === 'TimeOut') {
-                    // TimeOut данные идут в reviews, так как это обзоры
+                    
                     results.reviews.push(...data);
                 } else {
-                    // Остальные данные идут в shows
+                     
                     results.shows.push(...data);
                 }
                 
@@ -70,8 +68,8 @@ class TheatreDataAggregator {
 
 module.exports = {
     BaseScraper,
-    // Временно отключаем LondonTheatreScraper в экспорте
-    // LondonTheatreScraper,
+   
+    LondonTheatreScraper,
     TimeoutScraper,
     TheatreDataAggregator
 };

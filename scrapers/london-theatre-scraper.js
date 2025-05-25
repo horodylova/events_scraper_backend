@@ -1,5 +1,7 @@
 const BaseScraper = require('./base-scraper');
 const cheerio = require('cheerio');
+const puppeteer = require('puppeteer');
+const config = require('../config');
 
 class LondonTheatreScraper extends BaseScraper {
     constructor() {
@@ -8,11 +10,37 @@ class LondonTheatreScraper extends BaseScraper {
 
     async scrape(limit = null) {
         try {
-            const html = await this.fetchDataWithBrightData('https://www.londontheatre.co.uk/whats-on');
+            console.log(`[${this.name}] Starting browser-based scraping...`);
+            
+           
+            const browser = await puppeteer.connect({
+                browserWSEndpoint: config.brightData.browserApiEndpoint || process.env.BRIGHT_DATA_BROWSER_WS,
+            });
+            
+            console.log(`[${this.name}] Connected to browser! Navigating to site...`);
+            const page = await browser.newPage();
+            
+           
+            await page.goto('https://www.londontheatre.co.uk/whats-on', { 
+                waitUntil: "domcontentloaded", 
+                timeout: 15000 
+            });
+            
+            console.log(`[${this.name}] Page loaded! Waiting for content...`);
+            
+            await page.waitForSelector('div[data-test-id^="poster-"]', { timeout: 15000 });
+            
+            const html = await page.content();
+             
+            await browser.close();
+             
             const $ = cheerio.load(html);
             const shows = [];
+             
+            const showElements = $('div[data-test-id^="poster-"]');
+            console.log(`[${this.name}] Found ${showElements.length} potential show elements`);
 
-            $('div[data-test-id^="poster-"]').each((i, el) => {
+            showElements.each((i, el) => {
                 if (limit && shows.length >= limit) return false;
 
                 const titleElement = $(el).find('p[data-test-id^="product-"]');

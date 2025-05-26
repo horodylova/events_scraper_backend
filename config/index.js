@@ -1,10 +1,10 @@
 const config = {
     brightData: {
-        username: 'brd-customer-hl_978bee1c-zone-scraping_browser_events',
-        password: '87cv8gct5mg8',
+        username: process.env.BRIGHT_DATA_USERNAME,
+        password: process.env.BRIGHT_DATA_PASSWORD,
         host: process.env.BRIGHT_DATA_HOST,
         port: parseInt(process.env.BRIGHT_DATA_PORT, 10),
-        browserApiEndpoint: 'wss://brd-customer-hl_978bee1c-zone-scraping_browser_events:87cv8gct5mg8@brd.superproxy.io:9222'
+        browserApiEndpoint: process.env.BRIGHT_DATA_BROWSER_WS
     },
     huggingFace: {
         apiKey: process.env.HF_API_KEY,

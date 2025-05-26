@@ -30,3 +30,5 @@ app.listen(PORT, () => {
   console.log(`Check it out at: http://localhost:${PORT}`);
   console.log(`Check API at: http://localhost:${PORT}/api/message`);
 });
+
+require('./scheduler');

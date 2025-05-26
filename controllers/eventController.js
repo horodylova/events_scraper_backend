@@ -6,7 +6,6 @@ async function getAndScrapeEvents(req, res) {
         const aggregator = new TheatreDataAggregator();
         const results = await aggregator.scrapeAll();
         
-        // Сохраняем данные с использованием обновленного сервиса
         const savedData = await dataService.saveNewEvents([...results.shows, ...results.reviews]);
         
         res.status(200).json({

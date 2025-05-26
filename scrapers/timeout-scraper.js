@@ -23,7 +23,7 @@ class TimeoutScraper extends BaseScraper {
             
             await page.goto('https://www.timeout.com/london/theatre/london-theatre-reviews', { 
                 waitUntil: "domcontentloaded", 
-                timeout: 15000 
+                timeout: 30000 
             });
             
             console.log(`[${this.name}] Page loaded! Waiting for content...`);

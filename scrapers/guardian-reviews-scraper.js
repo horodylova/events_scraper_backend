@@ -1,17 +1,32 @@
+const BaseScraper = require('./base-scraper');
+const cheerio = require('cheerio');
+const puppeteer = require('puppeteer');
+const config = require('../config');
+
 class GuardianReviewsScraper extends BaseScraper {
     constructor() {
         super('Guardian', 'https://www.theguardian.com/stage/stage+tone/reviews');
     }
-
     
-    extractRating(title) {
-    
+    extractRating(element) {
+         
+        const starsElement = element.find('span.u-h');
+        if (starsElement.length) {
+            const starsText = starsElement.text().trim();
+            const starsMatch = starsText.match(/(\d+)\s*out of\s*(\d+)\s*stars/);
+            if (starsMatch) {
+                return `${starsMatch[1]}/${starsMatch[2]}`;
+            }
+        }
+        
+         
+        const title = element.find('.fc-item__title, h3').text().trim();
         const starMatch = title.match(/[★⭐]/g);
         if (starMatch) {
             return starMatch.length + '/5';
         }
         
-       
+        
         const textRatings = {
             'five star': '5/5',
             'four star': '4/5', 
@@ -37,14 +52,12 @@ class GuardianReviewsScraper extends BaseScraper {
         
         if (match) {
             const showName = match[1].trim();
-         
             const cleanShowName = showName.replace(/[★⭐]+/g, '').trim();
             return cleanShowName;
         }
         
         return null;
     }
-
 
     extractTheatre(title, excerpt) {
         const theatrePatterns = [
@@ -69,31 +82,57 @@ class GuardianReviewsScraper extends BaseScraper {
 
     async scrape(limit = null) {
         try {
-            const html = await this.fetchDataWithBrightData('https://www.theguardian.com/stage');
+            console.log(`[${this.name}] Starting browser-based scraping...`);
+            
+            const browser = await puppeteer.connect({
+                browserWSEndpoint: config.brightData.browserApiEndpoint || process.env.BRIGHT_DATA_BROWSER_WS,
+            });
+            
+            console.log(`[${this.name}] Connected to browser! Navigating to site...`);
+            const page = await browser.newPage();
+            
+             await page.goto('https://www.theguardian.com/stage/stage+tone/reviews', { 
+                waitUntil: "domcontentloaded", 
+                timeout: 15000  
+            });
+            
+            console.log(`[${this.name}] Page loaded! Waiting for content...`);
+             
+             await page.waitForSelector('.fc-item__container, .fc-item__content', { timeout: 15000 });  
+            
+             await new Promise(r => setTimeout(r, 3000));  
+            
+            const html = await page.content();
+            console.log(`[${this.name}] HTML content retrieved, length: ${html.length}`);
+            
+            await browser.close();
+            
             const $ = cheerio.load(html);
             const reviews = [];
 
-            $('article, .fc-item, .fc-item--standard').each((i, el) => {
+             $('.fc-item__container, .fc-item__content, .fc-item').each((i, el) => {
                 if (limit && reviews.length >= limit) return false;
 
                 const $el = $(el);
-                const titleElement = $el.find('h3 a, .fc-item__title a, .headline a').first();
+                
+                 const titleElement = $el.find('h3 a, .fc-item__title a, .js-headline-text');
                 const title = titleElement.text().trim();
-                const link = titleElement.attr('href');
-                const excerpt = $el.find('.fc-item__standfirst, .fc-trail__text, .summary').text().trim();
-                const author = $el.find('.byline, .contributor, .fc-item__byline').text().trim();
+                const link = titleElement.closest('a').attr('href');
+                
+                 const excerpt = $el.find('.fc-item__standfirst').text().trim();
+                
+                 const author = $el.find('.fc-item__byline').text().trim();
                 const dateElement = $el.find('time');
                 const date = dateElement.attr('datetime') || dateElement.text().trim();
 
-                // Фильтруем только театральные рецензии
-                if (title && link && (title.toLowerCase().includes('review') || title.toLowerCase().includes('★'))) {
-                    const rating = this.extractRating(title);
+                 if (title && link && (title.toLowerCase().includes('review') || title.toLowerCase().includes('★'))) {
+                    const rating = this.extractRating($el);
                     const showName = this.extractShowInfo(title);
                     const theatre = this.extractTheatre(title, excerpt);
 
                     reviews.push({
                         title: title,
-                        fullPageUrl: this.buildFullUrl(link),
+                        fullPageUrl: link ? (link.startsWith('http') ? link : this.buildFullUrl(link)) : null,
                         excerpt: excerpt || null,
                         author: author || null,
                         publishedDate: date || null,
@@ -108,19 +147,49 @@ class GuardianReviewsScraper extends BaseScraper {
             });
 
             console.log(`[${this.name}] Parsed ${reviews.length} theatre reviews.`);
+            if (reviews.length === 0) {
+                console.log(`[${this.name}] No reviews parsed. HTML snapshot for review (first 5000 chars):`);
+                console.log(html.substring(0, 5000));
+            }
             return reviews;
         } catch (error) {
             console.error(`[${this.name}] Error in scrape:`, error.message);
+            if (error.pageContent) {
+                console.error(`[${this.name}] Page content at the time of error (first 2000 chars):`, error.pageContent.substring(0,2000));
+            }
             throw error;
         }
     }
 
     async searchReviews(showName, limit = 5) {
         try {
+            console.log(`[${this.name}] Starting search for "${showName}"...`);
+            
+            const browser = await puppeteer.connect({
+                browserWSEndpoint: config.brightData.browserApiEndpoint || process.env.BRIGHT_DATA_BROWSER_WS,
+            });
+            
+            const page = await browser.newPage();
+            
             const searchQuery = encodeURIComponent(`${showName} review site:theguardian.com/stage`);
             const searchUrl = `https://www.theguardian.com/search?q=${searchQuery}`;
             
-            const html = await this.fetchDataWithBrightData(searchUrl);
+            await page.goto(searchUrl, { 
+                waitUntil: "domcontentloaded", 
+                timeout: 15000  
+            });
+            
+            console.log(`[${this.name}] Search page loaded! Waiting for results...`);
+            
+            await page.waitForSelector('.search-results, .fc-item__container', { timeout: 15000 });
+            
+            await new Promise(r => setTimeout(r, 3000));
+            
+            const html = await page.content();
+            console.log(`[${this.name}] Search results retrieved, length: ${html.length}`);
+            
+            await browser.close();
+            
             const $ = cheerio.load(html);
             const reviews = [];
 
@@ -128,17 +197,17 @@ class GuardianReviewsScraper extends BaseScraper {
                 if (limit && reviews.length >= limit) return false;
 
                 const $el = $(el);
-                const titleElement = $el.find('h3 a, .fc-item__title a').first();
+                const titleElement = $el.find('h3 a, .fc-item__title a, .js-headline-text').first();
                 const title = titleElement.text().trim();
-                const link = titleElement.attr('href');
+                const link = titleElement.closest('a').attr('href');
                 const excerpt = $el.find('.fc-item__standfirst, .search-result__text').text().trim();
 
                 if (title && link && title.toLowerCase().includes('review')) {
-                    const rating = this.extractRating(title);
+                    const rating = this.extractRating($el);
                     
                     reviews.push({
                         title: title,
-                        fullPageUrl: this.buildFullUrl(link),
+                        fullPageUrl: link ? (link.startsWith('http') ? link : this.buildFullUrl(link)) : null,
                         excerpt: excerpt || null,
                         rating: rating,
                         showName: showName,
@@ -158,3 +227,5 @@ class GuardianReviewsScraper extends BaseScraper {
         }
     }
 }
+
+module.exports = GuardianReviewsScraper;

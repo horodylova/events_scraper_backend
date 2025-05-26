@@ -50,8 +50,8 @@ async function writeReviews(reviews) {
 }
 
 async function saveNewEvents(newScrapedEvents) {
-    const newShows = newScrapedEvents.filter(event => event.source !== 'TimeOut');
-    const newReviews = newScrapedEvents.filter(event => event.source === 'TimeOut');
+    const newShows = newScrapedEvents.filter(event => event.source !== 'TimeOut' && event.source !== 'Guardian');
+    const newReviews = newScrapedEvents.filter(event => event.source === 'TimeOut' || event.source === 'Guardian');
     
 
     const existingShows = await readShows();

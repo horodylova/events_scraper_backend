@@ -2,6 +2,7 @@ const BaseScraper = require('./base-scraper');
 const LondonTheatreScraper = require('./london-theatre-scraper.js');
 const TimeoutScraper = require('./timeout-scraper.js');
 const LondonBoxOfficeScraper = require('./londonboxoffice-scraper.js');
+const GuardianReviewsScraper = require('./guardian-reviews-scraper.js');
 
 class TheatreDataAggregator {
     constructor() {
@@ -9,7 +10,8 @@ class TheatreDataAggregator {
         this.scrapers = [
             new LondonTheatreScraper(),
             new TimeoutScraper(),
-            new LondonBoxOfficeScraper()
+            new LondonBoxOfficeScraper(),
+            new GuardianReviewsScraper()
         ];
     }
 
@@ -27,7 +29,7 @@ class TheatreDataAggregator {
                 const data = await scraper.scrape(limit);
                 results.successfulSources++;
                  
-                if (scraper.name === 'TimeOut') {
+                if (scraper.name === 'TimeOut' || scraper.name === 'Guardian') {
                     
                     results.reviews.push(...data);
                 } else {
@@ -72,5 +74,6 @@ module.exports = {
     LondonTheatreScraper,
     TimeoutScraper,
     LondonBoxOfficeScraper,
+    GuardianReviewsScraper,
     TheatreDataAggregator
 };

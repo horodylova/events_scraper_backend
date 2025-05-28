@@ -5,10 +5,6 @@ const config = {
         host: process.env.BRIGHT_DATA_HOST,
         port: parseInt(process.env.BRIGHT_DATA_PORT, 10),
         browserApiEndpoint: process.env.BRIGHT_DATA_BROWSER_WS
-    },
-    huggingFace: {
-        apiKey: process.env.HF_API_KEY,
-        modelUrl: process.env.HF_MODEL_URL,
     }
 };
 

@@ -8,13 +8,11 @@ const router = express.Router();
 router
 .get('/scrape', eventController.getAndScrapeEvents)
 
-router
-    .get('/api/theatre/shows', dataController.getAllShows)
-    .get('/api/theatre/details', dataController.getShowDetails) 
-    .get('/api/theatre/reviews', dataController.getReviewsByShowTitle) 
-    .get('/api/theatre/prices', dataController.askAgent)
+.get('/shows', dataController.getAllShows)
+.get('/details', dataController.getShowDetails) 
+.get('/reviews', dataController.getReviewsByShowTitle) 
+.get('/prices', dataController.getPricesByShowTitle)
     
-router
-.post('/ask-agent', eventController.askAgent)
+.post('/ask-agent', agentController.askAgent)
 
 module.exports = router;

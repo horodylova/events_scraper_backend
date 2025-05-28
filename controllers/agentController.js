@@ -1,7 +1,8 @@
 const axios = require('axios');
 
 const HUGGING_FACE_SPACE_URL = process.env.HUGGING_FACE_SPACE_URL;
-const HUGGING_FACE_API_ENDPOINT = `${HUGGING_FACE_SPACE_URL}chat`;
+const HUGGING_FACE_API_ENDPOINT = `${HUGGING_FACE_SPACE_URL}/api/predict`;
+
 async function askAgent(req, res) {
     const userQuestion = req.body.question;
 
@@ -24,11 +25,10 @@ async function askAgent(req, res) {
         const response = await axios.post(HUGGING_FACE_API_ENDPOINT, payload, {
             headers: {
                 'Content-Type': 'application/json'
-                // 'Authorization': `Bearer ${process.env.HF_API_TOKEN}`
             }
         });
 
-        const agentResponse = response.data.data[0]; 
+        const agentResponse = response.data.data[0];
         res.status(200).json({ answer: agentResponse });
 
     } catch (error) {
